@@ -112,10 +112,18 @@ function path2short(path, escape = false) {
     return escape ? htmlEscape(rc) : rc;
 }
 
+function getEndpoint(host, bucket) {
+    return `${document.location.protocol}//${bucket}.${host}`;
+    // return `s3://${bucket}.${host}`;
+}
+
 // Virtual-hosted-style URL, ex: https://mybucket1.s3.amazonaws.com/index.html
-function object2hrefvirt(bucket, key, escape = false) {
+function object2hrefvirt(host, bucket, key, escape = false) {
     const enckey = key.split('/').map(x => encodeURIComponent(x)).join('/');
-    const rc = `${document.location.protocol}//${bucket}.s3.amazonaws.com/${enckey}`;
+    // const rc = `${document.location.protocol}//${bucket}.s3.amazonaws.com/${enckey}`;
+    // const rc = `${document.location.protocol}//${bucket}.${host}/${enckey}`;
+    const rc = `${host}/${bucket}/${enckey}`;
+
     return escape ? htmlEscape(rc) : rc;
 }
 
@@ -165,7 +173,17 @@ function SharedService($rootScope) {
 
         // AWS.config.update(settings.cred);
         // AWS.config.update({ region: settings.region });
-        AWS.config.update(Object.assign(settings.cred, { region: settings.region }));
+        
+        // AWS.config.update(Object.assign(settings.cred, { region: settings.region }));
+
+        // s3BucketEndpoint s3UseArnRegion
+        
+        var customEndpoint = new AWS.Endpoint(settings.url); // getEndpoint(settings.url, settings.bucket)
+        // var s3 = new AWS.S3({});
+        // https://<namespace>.ds11s3NS.swisscom.com/<bucket>
+        //  s3BucketEndpoint: true
+        AWS.config.update(Object.assign(settings.cred, { url: settings.url, s3ForcePathStyle: true, endpoint: customEndpoint }));
+
 
         if (this.skew) {
             this.correctClockSkew(settings.bucket);
@@ -383,7 +401,9 @@ function ViewController($scope, SharedService) {
 
     $scope.renderObject = (data, _type, full) => {
         // DEBUG.log('renderObject:', JSON.stringify(full));
-        const hrefv = object2hrefvirt($scope.view.settings.bucket, data);
+        // const hrefv = object2hrefvirt($scope.view.settings.bucket, data);
+
+        const hrefv = object2hrefvirt($scope.view.settings.url, $scope.view.settings.bucket, data);
 
         function buildAnchor(s3key, href, text, download) {
             const a = $('<a>');
@@ -624,7 +644,7 @@ function ViewController($scope, SharedService) {
             Bucket, Prefix, Delimiter, Marker,
         };
 
-        // DEBUG.log("AWS.config:", JSON.stringify(AWS.config));
+        DEBUG.log("AWS.config:", JSON.stringify(AWS.config));
 
         // Now make S3 listObjects call(s)
         if (AWS.config.credentials && AWS.config.credentials.accessKeyId) {
@@ -860,8 +880,8 @@ function InfoController($scope) {
         DEBUG.log('InfoController', 'broadcast change settings bucket:', args.settings.bucket);
         $scope.info.settings = args.settings;
         $scope.info.bucket = args.settings.bucket;
-        $scope.getBucketCors(args.settings.bucket);
-        $scope.getBucketPolicy(args.settings.bucket);
+        // $scope.getBucketCors(args.settings.bucket);
+        // $scope.getBucketPolicy(args.settings.bucket);
     });
 
     $scope.getBucketPolicy = (Bucket) => {
@@ -923,7 +943,16 @@ function SettingsController($scope, SharedService) {
     // Initialized for an unauthenticated user exploring the current bucket
     // TODO: calculate current bucket and initialize below
     $scope.settings = {
-        auth: 'anon', region: '', bucket: '', entered_bucket: '', selected_bucket: '', view: 'folder', delimiter: '/', prefix: '',
+        auth: 'anon', 
+        region: '',
+        bucket: '',
+        entered_bucket: '',
+        selected_bucket: '',
+        view: 'folder',
+        delimiter: '/',
+        prefix: '',
+        url: '',
+        // sslEnabled: false,
     };
     $scope.settings.mfa = { use: 'no', code: '' };
     $scope.settings.cred = { accessKeyId: '', secretAccessKey: '', sessionToken: '' };

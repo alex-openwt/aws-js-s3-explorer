@@ -49,6 +49,7 @@ permissions and limitations under the License.
                             <div class="col-md-18">
                                 <div class="panel panel-default">
                                     <div class="panel-body">
+                                        <!--
                                         <p><b>Bucket</b>: Please indicate which region and S3 bucket you want to explore.</p>
                                         <div class="input-group bottom-marg-10">
                                             <span class="input-group-addon">Region</span>
@@ -72,6 +73,18 @@ permissions and limitations under the License.
                                                 <option value="us-west-2">US West (Oregon)</option>
                                             </select>
                                         </div>
+                                        -->
+
+                                        <!-- Modification Start -->
+                                        <div class="input-group bottom-marg-10">
+                                            <h3>Path style: {{ settings.url }}/{{ settings.entered_bucket }}</h3>
+                                        </div>
+                                        <div class="input-group bottom-marg-10">
+                                            <span class="input-group-addon">Url</span>
+                                            <input name="url" ng-model="settings.url" type="text" class="form-control" placeholder="http://xxx.domain.com" ng-required="!url.length" />
+                                        </div>
+                                        <!-- Modification End -->   
+
                                         <div class="input-group bottom-marg-10" ng-show="settings.buckets.length">
                                             <span class="input-group-addon">Bucket</span>
                                             <select name="bucketlist" class="form-control" ng-model="settings.selected_bucket" placeholder="bucket" ng-required="buckets.length">
